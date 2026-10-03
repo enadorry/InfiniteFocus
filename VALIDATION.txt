@@ -1,0 +1,19 @@
+Infinite Focus 0.1.0 — verification
+
+Android Gradle build: assembleDebug — PASS
+Android lint: lintDebug — PASS (0 errors, 1 backup configuration warning)
+APK signature verification: PASS
+Android minimum SDK: 26 (Android 8.0)
+Android target SDK: 35
+
+Portable audio engine:
+10-minute render with two identical seeded engines: PASS
+Distinct random seed changes the output: PASS
+Configuration changed during rendering: PASS
+Generated frame count and PCM bounds: PASS
+Fade-out reaches silence: PASS
+Peak during stress render: 8159 / 32767
+45-second preview generated from the same engine.
+
+Not verified: physical-device playback, Bluetooth controls, lock-screen UI,
+long-running battery consumption, and vendor power-management behavior.

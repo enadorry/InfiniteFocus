@@ -1,2 +1,74 @@
-# InfiniteFocus
-Offline Android app that continuously composes ambient focus music on-device.
+# Infinite Focus
+
+端末の中で小節を作り続ける、オフラインの集中用BGMアプリ。歌・広告・通信・生成AIモデルはありません。Android 8.0以上対応。
+
+## スマホで試す
+
+同梱の `InfiniteFocus.apk` をAndroidに転送し、ファイルアプリから開いてインストールしてください。必要に応じて、そのファイルアプリの「不明なアプリのインストール」を許可します。
+
+アプリを開いて「演奏をはじめる」を押すと、新しい曲が始まります。通知の停止ボタンやイヤホンのメディア操作にも対応しています。通知の許可を求められたら、許可すると停止操作をしやすくなります。
+
+- テンポ：45〜100 BPM。次の小節から変更。
+- 旋律の音数：ベルのような音の出現頻度。次の小節から変更。
+- BGM音量：アプリ内の音量。スマホのメディア音量とは別です。
+- 控えめなドラム：キックとノイズ系の打楽器。
+- 雨のような環境音：録音ではなく、フィルタ付きノイズの合成音。
+- タイマー：無制限／25分／50分。再生中に選ぶと、その時点から数え直します。その他の設定変更ではタイマーはリセットしません。
+
+画面を消しても再生を続ける設計です。電話などで音声フォーカスを失ったとき、イヤホンが外れたときには停止し、自動再開しません。停止してから再生すると、別の乱数シードで新しい曲が始まります。
+
+`preview.mp3` は、同じ作曲エンジンで生成した45秒の試聴音源です。ドラムと環境音はオフです。最後だけフェードアウトしています。
+
+## Android Studioで編集する
+
+1. ZIPを展開し、`InfiniteFocus` フォルダをAndroid Studioの「Open」で開く。
+2. Gradle JDKを17に設定する。
+3. SDK ManagerでAndroid SDK Platform 35とBuild Tools 35.0.0を入れる。
+4. Gradle Syncが完了したら、USBデバッグを有効にした端末を選んでRun。
+
+Windowsのコマンドプロンプトでは：
+
+```bat
+gradlew.bat assembleDebug lintDebug
+```
+
+macOS/Linuxでは：
+
+```sh
+./gradlew assembleDebug lintDebug
+```
+
+APKは `app/build/outputs/apk/debug/app-debug.apk` に生成されます。初回の開発用ダウンロードにはネット接続が必要ですが、アプリの再生には不要です。
+
+環境：AGP 8.9.2、Gradle 8.11.1、Java 17、compile/target SDK 35、min SDK 26。これは試作版で、ストア公開用の署名・公開設定は含みません。ソースからのビルドには、各開発環境の標準デバッグ署名鍵を使います。配布APKと署名が異なる場合、更新する前に既存のアプリをアンインストールしてください。
+
+## 構造
+
+| ファイル | 役割 |
+|---|---|
+| `FocusSynth.java` | Androidに依存しない自動作曲とステレオPCM合成 |
+| `PlaybackService.java` | AudioTrack、フォアグラウンド再生、メディア通知、タイマー、音声フォーカス |
+| `MainActivity.java` | ネイティブAndroid画面、設定保存、再生操作 |
+| `tools/EngineCheck.java` | パソコンで作曲エンジンを検証し、試聴WAVを作る |
+
+初版は外部ライブラリなしのJava＋Android標準UI＋AudioTrackで構成しています。短い録音済み音源を繰り返す方式ではありません。パッド、ベル、ベース、ドラムを48kHzで合成し、和声は2小節単位、進行と旋律パターンは16小節単位で更新します。小節ごとのランダムな音の出現も加わります。音楽上の反復はありますが、曲全体を固定のループとして再生していません。
+
+音声バッファ、ディレイ、発音数に上限を設け、再生時間に比例してメモリが増えない構成にしています。開始・停止と音量変更にはフェードを入れ、出力はソフトリミッターを通しています。
+
+## エンジン検証
+
+JDK 17があれば、Android SDKなしで実行できます。
+
+```sh
+mkdir engine-classes
+javac -d engine-classes app/src/main/java/dev/enadorry/infinitefocus/FocusSynth.java tools/EngineCheck.java
+java -cp engine-classes EngineCheck preview.wav
+```
+
+10分相当の生成、同じシードの再現性、異なるシードの変化、途中の設定変更、PCMの範囲、フェード停止を確認します。
+
+Android実機での再生、ロック画面、Bluetooth操作、電池消費、端末メーカーごとのバックグラウンド制限は未検証です。集中しやすさは人によって異なるため、実際に聴きながら音量・音数・テンポを調整してください。
+
+## 次に広げられる機能
+
+プリセット、好みの保存、鍵盤音源、雨音の立体感、WAV録音、Kotlin/Composeへの画面移行。モデルのダウンロードや生成APIを追加せずに、作曲ルールと音色を増やせます。
