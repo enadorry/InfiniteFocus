@@ -77,7 +77,9 @@ public final class PlaybackService extends Service {
     private FocusSynth.Settings settings() {
         SharedPreferences p = getSharedPreferences("focus", MODE_PRIVATE);
         return new FocusSynth.Settings(p.getInt("bpm", 68), p.getInt("density", 35),
-            p.getBoolean("drums", false), p.getBoolean("rain", false), p.getInt("volume", 65) / 100.0);
+            p.getBoolean("drums", false), p.getBoolean("rain", false), p.getInt("volume", 65) / 100.0,
+            p.getBoolean("water", false), p.getBoolean("bamboo", false),
+            p.getInt("waterVolume", 55) / 100.0, p.getInt("bambooVolume", 60) / 100.0, p.getInt("bambooInterval", 25));
     }
     private void updateTimer() {
         int minutes = getSharedPreferences("focus", MODE_PRIVATE).getInt("timer", 0);
