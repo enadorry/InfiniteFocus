@@ -8,39 +8,29 @@ public final class FocusSynth {
     private static final int TABLE_SIZE = 8192;
     private static final double[] SIN = new double[TABLE_SIZE];
     static { for (int i = 0; i < TABLE_SIZE; i++) SIN[i] = Math.sin(i * 2 * Math.PI / TABLE_SIZE); }
-    static double sin(double phase) {
+    private static double sin(double phase) {
         double p = (phase - Math.floor(phase)) * TABLE_SIZE;
         int i = (int)p;
         return SIN[i] + (SIN[(i + 1) & (TABLE_SIZE - 1)] - SIN[i]) * (p - i);
     }
     public static final class Settings {
         public final int bpm, density;
-        public final boolean drums, rain, water, bamboo;
-        public final double volume, waterVolume, bambooVolume;
-        public final int bambooInterval;
+        public final boolean drums, rain;
+        public final double volume;
         public Settings(int bpm, int density, boolean drums, boolean rain, double volume) {
-            this(bpm, density, drums, rain, volume, false, false, .55, .60, 25);
-        }
-        public Settings(int bpm, int density, boolean drums, boolean rain, double volume,
-                        boolean water, boolean bamboo, double waterVolume, double bambooVolume, int bambooInterval) {
             this.bpm = Math.max(45, Math.min(100, bpm));
             this.density = Math.max(0, Math.min(100, density));
             this.drums = drums; this.rain = rain;
             this.volume = Math.max(0, Math.min(1, volume));
-            this.water = water; this.bamboo = bamboo;
-            this.waterVolume = Math.max(0, Math.min(1, waterVolume));
-            this.bambooVolume = Math.max(0, Math.min(1, bambooVolume));
-            this.bambooInterval = Math.max(10, Math.min(60, bambooInterval));
         }
     }
     private volatile Settings requested = new Settings(68, 35, false, false, .65);
     private Settings musical = requested;
     private final Random random;
-    private final NatureSynth nature;
     private final Voice[] voices = new Voice[64];
     private final double[] delayL = new double[16800], delayR = new double[21840];
     private int dl, dr, step, bar = -1, progression;
-    private double stepRemaining, gain, musicGain, rainLow, rainLevel;
+    private double stepRemaining, gain, rainLow, rainLevel;
     private volatile boolean fading;
     private long frames;
     private int[] motif = {0, 2, 1, 3, 2, 1, 0, 2};
@@ -51,7 +41,6 @@ public final class FocusSynth {
     };
     public FocusSynth(long seed) {
         random = new Random(seed);
-        nature = new NatureSynth(seed ^ 0x4E41545552454CL);
         for (int i = 0; i < voices.length; i++) voices[i] = new Voice();
     }
     public void configure(Settings settings) { requested = settings; }
@@ -100,7 +89,7 @@ public final class FocusSynth {
     public void render(short[] output, int frameCount) {
         if (frameCount < 0 || frameCount * 2 > output.length) throw new IllegalArgumentException("buffer");
         Settings latest = requested;
-        double target = fading ? 0 : 1;
+        double target = fading ? 0 : latest.volume;
         for (int f = 0; f < frameCount; f++) {
             if (stepRemaining <= 0) schedule();
             stepRemaining--;
@@ -112,15 +101,11 @@ public final class FocusSynth {
             }
             rainLow += .08 * ((random.nextDouble() * 2 - 1) - rainLow);
             rainLevel += ((latest.rain ? .026 : 0) - rainLevel) * .00008;
+            l += rainLow * rainLevel; r += rainLow * rainLevel;
             double echoL = delayL[dl], echoR = delayR[dr];
             delayL[dl] = l + echoR * .25; delayR[dr] = r + echoL * .25;
             dl = (dl + 1) % delayL.length; dr = (dr + 1) % delayR.length;
             l += echoL * .22; r += echoR * .22;
-            musicGain += (latest.volume - musicGain) * .00045;
-            l *= musicGain; r *= musicGain;
-            nature.sample(latest.water, latest.bamboo, latest.waterVolume, latest.bambooVolume, latest.bambooInterval);
-            l += rainLow * rainLevel + nature.left;
-            r += rainLow * rainLevel + nature.right;
             gain += (target - gain) * .00045;
             output[f * 2] = (short)(32767 * gain * l / (1 + Math.abs(l)));
             output[f * 2 + 1] = (short)(32767 * gain * r / (1 + Math.abs(r)));

@@ -13,16 +13,9 @@
 - BGM音量：アプリ内の音量。スマホのメディア音量とは別です。
 - 控えめなドラム：キックとノイズ系の打楽器。
 - 雨のような環境音：録音ではなく、フィルタ付きノイズの合成音。
-- 水のせせらぎ：左右で変化する流水と水滴の合成音。オン・オフと音量を個別調整。
-- 鹿威し（ししおどし）：短い水音に続く、竹が打ち付けられるような「コーン」という合成音。オン・オフ、音量、10〜60秒の間隔を調整。間隔には小さな揺らぎがあります。
-- 環境音だけ：BGM音量を0にすると、水・鹿威し・雨の音だけで聴けます。BGM音量は環境音の音量に影響しません。
 - タイマー：無制限／25分／50分。再生中に選ぶと、その時点から数え直します。その他の設定変更ではタイマーはリセットしません。
 
 画面を消しても再生を続ける設計です。電話などで音声フォーカスを失ったとき、イヤホンが外れたときには停止し、自動再開しません。停止してから再生すると、別の乱数シードで新しい曲が始まります。
-
-鹿威しはオンにして約3秒後に最初の音が鳴ります。間隔の変更は次の打音から適用されます。環境音のオン・オフや音量変更には短いフェードを入れています。
-
-`water-shishi-preview.mp3` は、BGMなしで水と鹿威しを重ねた20秒の試聴音源です。実録音ではありません。
 
 `preview.mp3` は、同じ作曲エンジンで生成した45秒の試聴音源です。ドラムと環境音はオフです。最後だけフェードアウトしています。
 
@@ -54,7 +47,6 @@ APKは `app/build/outputs/apk/debug/app-debug.apk` に生成されます。初�
 | ファイル | 役割 |
 |---|---|
 | `FocusSynth.java` | Androidに依存しない自動作曲とステレオPCM合成 |
-| `NatureSynth.java` | せせらぎ・水滴・鹿威しのステレオ合成 |
 | `PlaybackService.java` | AudioTrack、フォアグラウンド再生、メディア通知、タイマー、音声フォーカス |
 | `MainActivity.java` | ネイティブAndroid画面、設定保存、再生操作 |
 | `tools/EngineCheck.java` | パソコンで作曲エンジンを検証し、試聴WAVを作る |
@@ -69,12 +61,9 @@ JDK 17があれば、Android SDKなしで実行できます。
 
 ```sh
 mkdir engine-classes
-javac -d engine-classes app/src/main/java/dev/enadorry/infinitefocus/FocusSynth.java app/src/main/java/dev/enadorry/infinitefocus/NatureSynth.java tools/EngineCheck.java tools/NatureCheck.java
+javac -d engine-classes app/src/main/java/dev/enadorry/infinitefocus/FocusSynth.java tools/EngineCheck.java
 java -cp engine-classes EngineCheck preview.wav
-java -cp engine-classes NatureCheck water-shishi.wav
 ```
-
-せせらぎと鹿威しの単独再生、環境音の消音・停止、鹿威しの間隔、環境音を消音したとき音楽が変化しないことも検証します。
 
 10分相当の生成、同じシードの再現性、異なるシードの変化、途中の設定変更、PCMの範囲、フェード停止を確認します。
 

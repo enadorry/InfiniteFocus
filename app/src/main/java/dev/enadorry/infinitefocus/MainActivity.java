@@ -70,13 +70,6 @@ public final class MainActivity extends Activity {
         slider(panel, "BGM音量", "volume", 0, 100, 65, "%");
         toggle(panel, "控えめなドラム", "drums");
         toggle(panel, "雨のような環境音", "rain");
-        margin(panel, text("水辺の音", 15, accent), 24);
-        toggle(panel, "水のせせらぎ", "water");
-        slider(panel, "水の音量", "waterVolume", 0, 100, 55, "%");
-        toggle(panel, "鹿威し（ししおどし）", "bamboo");
-        slider(panel, "鹿威しの音量", "bambooVolume", 0, 100, 60, "%");
-        slider(panel, "鹿威しの間隔", "bambooInterval", 10, 60, 25, "秒");
-        margin(panel, text("BGM音量を0にすると、環境音だけで聴けます。", 11, muted), 14);
         margin(root, text("終了タイマー", 13, muted), 24);
         LinearLayout timers = new LinearLayout(this); timers.setOrientation(LinearLayout.HORIZONTAL); margin(root, timers, 8);
         int[] values = {0,25,50}; String[] labels = {"無制限", "25分", "50分"}; Button[] buttons = new Button[3];
